@@ -1,9 +1,10 @@
 #Method object for calculating averages
-class Averger
-  def initialize(response, current_time)
+class Averager
+  def initialize(response, current_time, number_of_buckets, to_time)
+    @number_of_buckets = number_of_buckets
     @response = response
     @current_time = current_time
-    @number_of_buckets = 24
+    @to_time = to_time
   end
 
   def calculate
@@ -55,9 +56,10 @@ class Averger
   end
 
   def set_range
-    @high_end = @current_time - @offset.hour
-    @low_end = @current_time - (@offset + 1).hour
+    @high_end = @current_time - @to_time.call(@offset)
+    @low_end = @current_time - @to_time.call(@offset + 1)
   end
+
 end
 
 class RecordsController < ApplicationController
@@ -74,15 +76,16 @@ skip_before_filter :verify_authenticity_token
     # iterate over the each minute of the first hour
 
     #get records for the last 24 hours from the database
-    hours_ago = 24
     current_time = Time.now.utc
+    hours_ago = 24
     response = Record.where(created_at: current_time - hours_ago.hour..current_time)
     response.order! 'created_at DESC'
     #exit early if there are no records found in the past 24 hours
     if response.length == 0
       render plain: "No records found for the past 24 hours"
     else
-      averager = Averger.new response, current_time
+      averager = Averager.new response, current_time, 24, lambda {|offset| offset.hour }
+      # averager = Averager.new response.where(created_at: current_time - 60.minute..current_time), current_time, 60, lambda {|offset| offset.minute }
       render json: averager.calculate
     end
   end
