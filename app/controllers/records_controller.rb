@@ -3,14 +3,13 @@ class Averger
   def initialize(response, current_time)
     @response = response
     @current_time = current_time
+    @number_of_buckets = 24
   end
 
   def calculate
     #otherwise, set up a place for the record to go
     # these are the pointers to create each hour range
     @everything = {}
-    @sub_one = -1
-    @sub_two = 0
     move_to_next_range
     #go through each of the records
     # until @hours_ago == 0 do
@@ -26,7 +25,7 @@ class Averger
 
     record_current_range
 
-    until @everything.length == 24
+    until @everything.length == @number_of_buckets
       record_current_range
     end
 
@@ -42,7 +41,8 @@ class Averger
     @cpu_average = @cpu_total/@count
     @ram_average = @ram_total/@count
     #set the key and values for the range and move to the next timeframe
-    @everything[@range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
+    range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
+    @everything[range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
     move_to_next_range
   end
 
@@ -50,12 +50,13 @@ class Averger
     @cpu_total = 0
     @ram_total = 0
     @count = 0
+    @offset ? @offset += 1 : @offset = 0
+    set_range
+  end
 
-    @sub_one += 1
-    @sub_two += 1
-    @high_end = @current_time - @sub_one.hour
-    @low_end = @current_time - @sub_two.hour
-    @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
+  def set_range
+    @high_end = @current_time - @offset.hour
+    @low_end = @current_time - (@offset + 1).hour
   end
 end
 
