@@ -88,67 +88,8 @@ skip_before_filter :verify_authenticity_token
         @everything[@range_label] = ["CPU average: 0, RAM average: 0"]
       end
 
-render json: @everything
+      render json: @everything
     end
-
-
-    #   @count = 0
-    #     @cpu_total = 0
-    #     @ram_total = 0
-    #     #set range
-    #     @high_end = @current_time
-    #     @low_end = @current_time-1.hour
-    #     @range = @high_end..@low_end
-    # @response.each do |record|
-    #   #set up max and min time
-    #   #@max_cap = @current_time - @second_hour.hour
-    #   #@min_cap = @current_time - @first_hour.hour
-    #   #set up label for current timeframe
-    #   #@timespan = "#{@min_cap.to_formatted_s(:long)} to #{@max_cap.to_formatted_s(:long)}"
-    #
-    #
-    #   #@everything["Average load values for #{params[:server_id]} server from #{@min_cap.to_formatted_s(:long)} to #{@max_cap.to_formatted_s(:long)}"] = "hi"
-    #
-    #
-    #     #check the created_at time of each record]
-    #     #if the created_at ime is within the timeframe
-    #     if record.created_at < @high_end && record.created_at > @low_end
-    #       #increase values
-    #       @cpu_total += record.cpu
-    #       @ram_total += record.ram
-    #       @count += 1
-    #
-    #     else
-    #     #if the created_at time is outside of the timeframe
-    #     #check if there are no records found
-    #       @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
-    #       if @count == 0
-    #         @everything[@range_label] = "No records for this timeframe"
-    #         next
-    #       else
-    #     #otherwise divide the values
-    #
-    #         @cpu_average = @cpu_total/@count
-    #         @ram_average = @ram_total/@count
-    #     #assign value to the key of range
-    #
-    #         @everything[@range_label]= [@cpu_average, @ram_average]
-    #     #increment values to set up the range boundaries for the next iteration
-    #       @high_end+=1
-    #       @low_end+=1
-    #       #make new range label
-    #
-    #       #decrement limit
-    #       @limit -=1
-    #       #reset @count
-    #       @count = 0
-    #       next
-    #     end
-    #       end
-    #     end
-    #   end
-    # end
-    # render json: @everything
   end
 
 
