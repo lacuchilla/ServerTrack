@@ -40,7 +40,6 @@ skip_before_filter :verify_authenticity_token
         @low_end = @current_time - @sub_two.hour
         @range = @high_end..@low_end
 
-        binding.pry
         @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
 
         if !(record.created_at < @high_end && record.created_at > @low_end)
@@ -50,13 +49,10 @@ skip_before_filter :verify_authenticity_token
           @count = 1 if @count == 0
           #do the calculation
 
-          binding.pry
           @cpu_average = @cpu_total/@count
           @ram_average = @ram_total/@count
-          binding.pry
         #set the key and values for the range and move to the next timeframe
           @everything[@range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
-          binding.pry
           @sub_one += 1
           @sub_two += 1
           # @hours_ago-=1
@@ -64,14 +60,11 @@ skip_before_filter :verify_authenticity_token
           @cpu_total = 0
           @ram_total = 0
           @count = 0
-          binding.pry
         end
 
-        binding.pry
         @cpu_total += record.cpu
         @ram_total += record.ram
         @count += 1
-        binding.pry
 
         # next
       end
@@ -82,7 +75,6 @@ skip_before_filter :verify_authenticity_token
       @ram_average = @ram_total/@count
     #set the key and values for the range and move to the next timeframe
       @everything[@range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
-
 
       until @everything.length == 24
         @sub_one += 1
