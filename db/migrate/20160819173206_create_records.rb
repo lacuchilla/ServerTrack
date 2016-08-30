@@ -1,0 +1,8 @@
+class CreateRecords < ActiveRecord::Migration[5.0]
+  def change
+    create_table :records, id: false do |t|
+      t.belongs_to :server, index: true
+      t.timestamps
+    end
+  end
+end
