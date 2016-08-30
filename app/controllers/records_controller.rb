@@ -1,35 +1,26 @@
-#Method object for calculating averages
 class Averager
-  def initialize(response, current_time, number_of_buckets, to_time)
+  def initialize(records, current_time, number_of_buckets, to_time)
     @number_of_buckets = number_of_buckets
-    @response = response.where(created_at: current_time - to_time.call(number_of_buckets)..current_time)
+    @records = records.where(created_at: current_time - to_time.call(number_of_buckets)..current_time)
     @current_time = current_time
     @to_time = to_time
   end
 
   def calculate
-    #otherwise, set up a place for the record to go
-    # these are the pointers to create each hour range
     @everything = {}
     move_to_next_range
-    #go through each of the records
-    # until @hours_ago == 0 do
-    @response.each do |record|
+    @records.each do |record|
       while not_in_range? record
         record_current_range
       end
-
       @cpu_total += record.cpu
       @ram_total += record.ram
       @count += 1
     end
-
     record_current_range
-
     until @everything.length == @number_of_buckets
       record_current_range
     end
-
     @everything
   end
 
@@ -41,7 +32,7 @@ class Averager
     @count = 1 if @count == 0
     @cpu_average = @cpu_total/@count
     @ram_average = @ram_total/@count
-    #set the key and values for the range and move to the next timeframe
+
     range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
     @everything[range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
     move_to_next_range
@@ -70,22 +61,16 @@ skip_before_filter :verify_authenticity_token
   end
 
   def show
-    # todo: figure out how to get the records in time descending order
-    # fix ability to get to next record in list instead of staying stuck
-    # make sure time ranges with no records are still getting added with zeros for the values
-    # iterate over the each minute of the first hour
-
-    #get records for the last 24 hours from the database
     current_time = Time.now.utc
-    response = Record.where(created_at: current_time - 24.hour..current_time)
-    response.order! 'created_at DESC'
-    #exit early if there are no records found in the past 24 hours
-    if response.length == 0
+    records = Record.where(created_at: current_time - 24.hour..current_time)
+    records.order! 'created_at DESC'
+
+    if records.length == 0
       render plain: "No records found for the past 24 hours"
     else
-      averager = Averager.new response, current_time, 24, lambda {|offset| offset.hour }
-      # averager = Averager.new response, current_time, 60, lambda {|offset| offset.minute }
-      render json: averager.calculate
+      min_averager = Averager.new records, current_time, 60, lambda {|offset| offset.minute }
+      hour_averager = Averager.new records, current_time, 24, lambda {|offset| offset.hour }
+      render json: {:minutes => min_averager.calculate, :hours => hour_averager.calculate }
     end
   end
 
