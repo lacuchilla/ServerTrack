@@ -2,7 +2,7 @@
 class Averager
   def initialize(response, current_time, number_of_buckets, to_time)
     @number_of_buckets = number_of_buckets
-    @response = response
+    @response = response.where(created_at: current_time - to_time.call(number_of_buckets)..current_time)
     @current_time = current_time
     @to_time = to_time
   end
@@ -77,15 +77,14 @@ skip_before_filter :verify_authenticity_token
 
     #get records for the last 24 hours from the database
     current_time = Time.now.utc
-    hours_ago = 24
-    response = Record.where(created_at: current_time - hours_ago.hour..current_time)
+    response = Record.where(created_at: current_time - 24.hour..current_time)
     response.order! 'created_at DESC'
     #exit early if there are no records found in the past 24 hours
     if response.length == 0
       render plain: "No records found for the past 24 hours"
     else
       averager = Averager.new response, current_time, 24, lambda {|offset| offset.hour }
-      # averager = Averager.new response.where(created_at: current_time - 60.minute..current_time), current_time, 60, lambda {|offset| offset.minute }
+      # averager = Averager.new response, current_time, 60, lambda {|offset| offset.minute }
       render json: averager.calculate
     end
   end
