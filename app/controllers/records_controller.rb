@@ -1,16 +1,16 @@
+#Method object for calculating averages
 class Averger
   def initialize(response, current_time)
     @response = response
     @current_time = current_time
+    @everything = {}
   end
 
   def calculate
     #otherwise, set up a place for the record to go
-    @everything = {}
     # these are the pointers to create each hour range
     @sub_one = 0
     @sub_two = 1
-
     #set the default values to calculate cpu and ram averages
     @cpu_total = 0
     @ram_total = 0
@@ -23,28 +23,12 @@ class Averger
       #determine the range for the current iteration
       @high_end = @current_time - @sub_one.hour
       @low_end = @current_time - @sub_two.hour
-      @range = @high_end..@low_end
-
       @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
 
       if !(record.created_at < @high_end && record.created_at > @low_end)
         #move to the next record (go back to line 31 with a new record)
         #check for zero
-
-        @count = 1 if @count == 0
-        #do the calculation
-
-        @cpu_average = @cpu_total/@count
-        @ram_average = @ram_total/@count
-      #set the key and values for the range and move to the next timeframe
-        @everything[@range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
-        @sub_one += 1
-        @sub_two += 1
-        # @hours_ago-=1
-        #reset the defaults for calculation
-        @cpu_total = 0
-        @ram_total = 0
-        @count = 0
+        record_current_range
       end
 
       @cpu_total += record.cpu
@@ -54,26 +38,31 @@ class Averger
       # next
     end
 
+    record_current_range
+
+    until @everything.length == 24
+      @high_end = @current_time - @sub_one.hour
+      @low_end = @current_time - @sub_two.hour
+      @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
+
+      record_current_range
+    end
+
+    @everything
+  end
+
+  def record_current_range
     @count = 1 if @count == 0
-    #do the calculation
     @cpu_average = @cpu_total/@count
     @ram_average = @ram_total/@count
     #set the key and values for the range and move to the next timeframe
     @everything[@range_label] = ["CPU average: #{@cpu_average}, RAM average: #{@ram_average}"]
-
-    until @everything.length == 24
-      @sub_one += 1
-      @sub_two += 1
-
-      @high_end = @current_time - @sub_one.hour
-      @low_end = @current_time - @sub_two.hour
-
-      @range_label = "#{@high_end.to_formatted_s(:long)} to #{@low_end.to_formatted_s(:long)}"
-
-      @everything[@range_label] = ["CPU average: 0, RAM average: 0"]
-    end
-
-    @everything
+    @sub_one += 1
+    @sub_two += 1
+    #reset the defaults for calculation
+    @cpu_total = 0
+    @ram_total = 0
+    @count = 0
   end
 end
 
