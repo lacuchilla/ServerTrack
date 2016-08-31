@@ -70,7 +70,6 @@ skip_before_filter :verify_authenticity_token
     response = Record.where(created_at: current_time - 24.hour..current_time)
     response.order! 'created_at DESC'
 
-<<<<<<< HEAD
     if response.length == 0
       render plain: "No records found for the past 24 hours"
     else
@@ -78,15 +77,6 @@ skip_before_filter :verify_authenticity_token
       min_averager = Averager.new response, current_time, 60, lambda {|offset| offset.minute }
       render json: {:minutes => min_averager.calculate, :hours => hour_averager.calculate}
     end
-=======
-    # if records.length == 0
-      # render plain: "No records found for the past 24 hours"
-    # else
-      min_averager = Averager.new records, current_time, 60, lambda {|offset| offset.minute }
-      hour_averager = Averager.new records, current_time, 24, lambda {|offset| offset.hour }
-      render json: {:minutes => min_averager.calculate, :hours => hour_averager.calculate }
-    # end
->>>>>>> a487bfeb8c7d010ab312c9122e8123d55f139aeb
   end
 
 
