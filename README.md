@@ -46,11 +46,15 @@ To start the server:
 
 Navigate into the ServerTrack folder
 
-Type the words:
+
+To start the server:
+
+Navigate into the ServerTrack folder
 
 rails server
 
 into the command line
+
 
 Open another terminal tab
 
