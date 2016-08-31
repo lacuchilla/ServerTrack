@@ -1,7 +1,7 @@
 class Averager
-  def initialize(records, current_time, number_of_buckets, to_time)
+  def initialize(response, current_time, number_of_buckets, to_time)
     @number_of_buckets = number_of_buckets
-    @records = records.where(created_at: current_time - to_time.call(number_of_buckets)..current_time)
+    @response = response.where(created_at: current_time - to_time.call(number_of_buckets)..current_time)
     @current_time = current_time
     @to_time = to_time
   end
@@ -9,18 +9,23 @@ class Averager
   def calculate
     @everything = {}
     move_to_next_range
-    @records.each do |record|
+
+    @response.each do |record|
       while not_in_range? record
         record_current_range
       end
+
       @cpu_total += record.cpu
       @ram_total += record.ram
       @count += 1
     end
+
     record_current_range
+
     until @everything.length == @number_of_buckets
       record_current_range
     end
+
     @everything
   end
 
@@ -62,15 +67,15 @@ skip_before_filter :verify_authenticity_token
 
   def show
     current_time = Time.now.utc
-    records = Record.where(created_at: current_time - 24.hour..current_time)
-    records.order! 'created_at DESC'
+    response = Record.where(created_at: current_time - 24.hour..current_time)
+    response.order! 'created_at DESC'
 
-    if records.length == 0
+    if response.length == 0
       render plain: "No records found for the past 24 hours"
     else
-      min_averager = Averager.new records, current_time, 60, lambda {|offset| offset.minute }
-      hour_averager = Averager.new records, current_time, 24, lambda {|offset| offset.hour }
-      render json: {:minutes => min_averager.calculate, :hours => hour_averager.calculate }
+      hour_averager = Averager.new response, current_time, 24, lambda {|timestamp| timestamp.hour }
+      min_averager = Averager.new response, current_time, 60, lambda {|offset| offset.minute }
+      render json: {:minutes => min_averager.calculate, :hours => hour_averager.calculate}
     end
   end
 
